@@ -5,6 +5,7 @@ let groupData = null;
 let stateTree = null;
 let variableTree = null;
 let groupLookup = null;
+let variableLookup = null;
 
 const fetchStates = (ev) => {
     //documentation: https://api.census.gov/data/2010/dec/sf1?get=H001001,NAME&for=state:*
@@ -180,6 +181,7 @@ const displayVariables = (ev) => {
 
 const buildVariableTree = () => {
     variableTree = {};
+    variableLookup = {};
     for (const key in variableData.variables) {
         const entry = variableData.variables[key];
         const group = groupLookup[entry.group] + ' (' + entry.group + ')';
@@ -200,7 +202,10 @@ const buildVariableTree = () => {
             if (level === numTokens) {
                 elem[token].Metadata.code = key;
                 if (entry.concept) {
+                    variableLookup[key] = entry.concept;
                     elem[token].Metadata.description = entry.concept;
+                } else {
+                    variableLookup[key] = 'Not available';
                 }
             }
             elem = elem[token];
@@ -222,6 +227,8 @@ const buildVariableTree = () => {
         return sorted;
     }
     variableTree = sortObject(variableTree);
+    variableLookup = sortObject(variableLookup);
+    console.log(variableLookup);
 };
 
 const jsonify = (data) => {
@@ -266,5 +273,19 @@ const renderTemplate = (domID) => {
     };
 };
 
+
+const getStatistics = () => {
+    // data for Cook County:
+    // https://api.census.gov/data/2010/dec/sf1?get=NAME,PCT020003&for=county:031&in=state:17
+    const variables = ['NAME', 'PCT020003'];
+    const state = '17'; // illinois
+    const counties = ['031', '097']; // cook and lake
+    const url = `https://api.census.gov/data/2010/dec/sf1?get=${variables.join(',')}&for=county:${counties.join(',')}&in=state:${state}`; 
+    console.log(url);
+}
+
+
+//initialize:
 renderTemplate('census_demo');
 fetchVariables();
+getStatistics();
