@@ -55,6 +55,7 @@ h2 span {
 ::-webkit-scrollbar {
   -webkit-appearance: none;
   width: 15px;
+  background: #F0F0F0;
 }
 
 ::-webkit-scrollbar-thumb {

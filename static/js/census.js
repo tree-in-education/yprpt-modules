@@ -182,7 +182,7 @@ const buildVariableTree = () => {
     variableTree = {};
     for (const key in variableData.variables) {
         const entry = variableData.variables[key];
-        const group = groupLookup[entry.group] + '(' + entry.group + ')';
+        const group = groupLookup[entry.group] + ' (' + entry.group + ')';
         const tokens = entry.label.split('!!');
         const numTokens = tokens.length;
         if (!(group in variableTree)) {
