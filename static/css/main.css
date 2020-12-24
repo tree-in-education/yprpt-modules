@@ -80,8 +80,10 @@ table.variables td, table.variables th {
 
 table.variables th {
   word-break: break-all;
-  font-weight: 600;
+  font-weight: 700;
   background: #F6F6F6;
+  padding: 10px;
+  text-transform: capitalize;
 }
 
 #census_demo .container {
