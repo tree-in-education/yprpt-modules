@@ -6,6 +6,8 @@ let stateTree = null;
 let variableTree = null;
 let groupLookup = null;
 let variableLookup = null;
+let variables = [];
+let states = [];
 
 const fetchStates = (ev) => {
     //documentation: https://api.census.gov/data/2010/dec/sf1?get=H001001,NAME&for=state:*
@@ -40,14 +42,23 @@ const displayStates = () => {
         delete stateTree['NAME'];
     }
     if (showRawJSON) {
-        jsonify(stateTree);
+        jsonify(stateTree, addState);
     } else {
         const rows = []
         for (key in stateTree) {
             const entry = stateTree[key];
-            rows.push(`<td>${key}</td><td>${numberWithCommas(entry.housing_units)}</td><td>${entry.code}</td>`);
+            rows.push(`
+                <td>${key}</td>
+                <td>${numberWithCommas(entry.housing_units)}</td>
+                <td><a href="#" data-code="${entry.code}">${entry.code}</a></td>
+            `);
         }
-        document.querySelector('#output').innerHTML = '<table><tr>' + rows.join('</tr><tr>') + '</tr></table>';
+        document.querySelector('#output').innerHTML = '<table class="states"><tr>' + rows.join('</tr><tr>') + '</tr></table>';
+
+        const links = document.querySelector('table.states').querySelectorAll('a');
+        for (const link of links) {
+            link.onclick = addState;
+        }
     }
 };
 
@@ -70,10 +81,6 @@ const fetchVariables = (ev) => {
             variableData = data;
             fetchGroups();
         })
-}
-
-const fetchUrl = (url, globalVar, callback) => {
-    
 }
 
 const fetchGroups = (ev) => {
@@ -106,15 +113,8 @@ const displayVariables = (ev) => {
     if (!variableTree) {  buildVariableTree(); }
 
     if (showRawJSON) {
-        jsonify(variableTree);
+        jsonify(variableTree, addVariable);
     } else {
-        // const rows = [];
-        // for (const key in variableData.variables) {
-        //     const entry = variableData.variables[key];
-        //     const label = entry.label.replaceAll('!!', ' > ');
-        //     rows.push(`<td>${key}</td><td style="width:300px;">${label}</td><TD>${entry.concept}`);
-        // }
-        // document.querySelector('#output').innerHTML = '<table><tr>' + rows.join('</tr><tr>') + '</tr></table>';
         const rows = [];
         for (const group in variableTree) {
             const entry = variableTree[group];
@@ -127,14 +127,8 @@ const displayVariables = (ev) => {
                 const description2 = entry2.Metadata.description ? entry2.Metadata.description.toLowerCase() : '';
                 rows.push(`
                     <td>${key}</td>
-                    <td>${entry2.Metadata.code}</td>
-                    <td>${description2}</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
+                    <td><a href="#" data-code="${entry2.Metadata.code}">${entry2.Metadata.code}</a></td>
+                    <td colspan="7">${description2}</td>
                 `);
                 for (key2 in entry2) {
                     if (key2 === 'Metadata') {
@@ -143,15 +137,10 @@ const displayVariables = (ev) => {
                     const entry3 = entry2[key2];
                     const description3 = entry3.Metadata.description ? entry3.Metadata.description.toLowerCase() : '';
                     rows.push(`
-                        <td></td>
-                        <td></td>
-                        <td></td>
+                        <td colspan="3"></td>
                         <td>${key2}</td>
-                        <td>${entry3.Metadata.code}</td>
-                        <td>${description3}</td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
+                        <td><a href="#" data-code="${entry3.Metadata.code}">${entry3.Metadata.code}</a></td>
+                        <td colspan="4">${description3}</td>
                     `);
 
                     for (key3 in entry3) {
@@ -161,14 +150,9 @@ const displayVariables = (ev) => {
                         const entry4 = entry3[key3];
                         const description4 = entry4.Metadata.description ? entry4.Metadata.description.toLowerCase() : '';
                         rows.push(`
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
+                            <td colspan="6"></td>
                             <td>${key3}</td>
-                            <td>${entry4.Metadata.code}</td>
+                            <td><a href="#" data-code="${entry4.Metadata.code}">${entry4.Metadata.code}</a></td>
                             <td>${description4}</td>
                         `);
                     }
@@ -176,7 +160,22 @@ const displayVariables = (ev) => {
             }
         }
         document.querySelector('#output').innerHTML = '<table class="variables"><tr>' + rows.join('</tr><tr>') + '</tr></table>';
+        const links = document.querySelector('table.variables').querySelectorAll('a');
+        for (const link of links) {
+            link.onclick = addVariable;
+        }
     }
+};
+
+const addVariable = (ev) => {
+    variables.push(ev.currentTarget.dataset.code);
+    document.querySelector('#selected-variables').innerHTML = JSON.stringify(variables, null, 2);
+    return false;
+};
+const addState = (ev) => {
+    states.push(ev.currentTarget.dataset.code);
+    document.querySelector('#selected-states').innerHTML = JSON.stringify(states, null, 2);
+    return false;
 };
 
 const buildVariableTree = () => {
@@ -231,12 +230,27 @@ const buildVariableTree = () => {
     console.log(variableLookup);
 };
 
-const jsonify = (data) => {
+const jsonify = (data, callback) => {
     document.querySelector('#output').innerHTML = '';
     var jsonViewer = new JSONViewer();
     document.querySelector('#output').appendChild(jsonViewer.getContainer());
     jsonViewer.showJSON(data, -1, 1);
-}
+    
+    //add links:
+    addLinks(callback);
+};
+
+const addLinks = (callback) => {
+    const nodes = document.querySelectorAll('.type-string');
+    for (const node of nodes) {
+        const text = node.parentElement.firstChild.data;
+        if (text === 'code: ') {
+            const code = node.innerHTML.slice(1, node.innerHTML.length-1);
+            node.innerHTML = `<a href="#" data-code="${code}">${code}</a>`;
+            node.querySelector('a').onclick = callback;
+        }
+    }
+};
 
 const highlightButton = (ev) => {
     for (const btn of document.querySelectorAll('button')) {
@@ -259,7 +273,17 @@ const renderTemplate = (domID) => {
             </span>
             <span class="pull-right"><input type="checkbox" id="data-view" checked /> Code View</span>
         </section>
-        <div id="output"></div>
+        <section id="output"></section>
+        <section id="queries">
+            <div>
+                <strong>Location</strong>
+                <div id="selected-states"></div>
+            </div>
+            <div>
+                <strong>Selected Variables</strong>
+                <div id="selected-variables"></div>
+            </div>
+        </section>
     </div>`
     document.querySelector('#' + domID).innerHTML = template;
     document.querySelector('#states').onclick = fetchStates;
@@ -277,10 +301,9 @@ const renderTemplate = (domID) => {
 const getStatistics = () => {
     // data for Cook County:
     // https://api.census.gov/data/2010/dec/sf1?get=NAME,PCT020003&for=county:031&in=state:17
-    const variables = ['NAME', 'PCT020003'];
     const state = '17'; // illinois
     const counties = ['031', '097']; // cook and lake
-    const url = `https://api.census.gov/data/2010/dec/sf1?get=${variables.join(',')}&for=county:${counties.join(',')}&in=state:${state}`; 
+    const url = `https://api.census.gov/data/2010/dec/sf1?get=NAME,PCT020003&for=county:${counties.join(',')}&in=state:${state}`; 
     console.log(url);
 }
 
