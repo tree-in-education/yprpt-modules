@@ -1,12 +1,13 @@
 const API_KEY = '1983b495da8f0c848fbec1c18f56f789839d773c';
 let stateData = null;
+let countyData = null;
 let variableData = null;
 let groupData = null;
 let stateTree = null;
 let variableTree = null;
 let groupLookup = null;
 let variableLookup = null;
-let variables = [];
+let variables = ['NAME'];
 let states = [];
 
 const fetchStates = (ev) => {
@@ -20,12 +21,25 @@ const fetchStates = (ev) => {
 
     //only query if it doesn't exist yet:
     const url = 'https://api.census.gov/data/2010/dec/sf1?get=H001001,NAME&for=state:*';
-    document.querySelector('#output').innerHTML = 'Retrieving data from census.gov...';
+    document.querySelector('#variable-selection').innerHTML = 'Retrieving data from census.gov...';
     fetch(url)
         .then(response => response.json())
         .then(data => {
             stateData = data;
+            fetchCounties();
+        });
+};
+
+fetchCounties = () => {
+    const url = `https://api.census.gov/data/2010/dec/sf1?get=NAME,H001001&for=county:*&in=state:*`; 
+    console.log('fetching:', url);
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);
+            countyData = data;
             displayStates();
+            // jsonify(data, target='#results', callback=null, depth=2);
         });
 };
 
@@ -42,7 +56,7 @@ const displayStates = () => {
         delete stateTree['NAME'];
     }
     if (showRawJSON) {
-        jsonify(stateTree, addState);
+        jsonify(stateTree, target="#variable-selection", callback=addState);
     } else {
         const rows = []
         for (key in stateTree) {
@@ -53,7 +67,7 @@ const displayStates = () => {
                 <td><a href="#" data-code="${entry.code}">${entry.code}</a></td>
             `);
         }
-        document.querySelector('#output').innerHTML = '<table class="states"><tr>' + rows.join('</tr><tr>') + '</tr></table>';
+        document.querySelector('#variable-selection').innerHTML = '<table class="states"><tr>' + rows.join('</tr><tr>') + '</tr></table>';
 
         const links = document.querySelector('table.states').querySelectorAll('a');
         for (const link of links) {
@@ -74,7 +88,7 @@ const fetchVariables = (ev) => {
 
     //only query if it doesn't exist yet:
     const url = 'https://api.census.gov/data/2010/dec/sf1/variables.json';
-    document.querySelector('#output').innerHTML = 'Retrieving data from census.gov...';
+    document.querySelector('#variable-selection').innerHTML = 'Retrieving data from census.gov...';
     fetch(url)
         .then(response => response.json())
         .then(data => {
@@ -90,7 +104,7 @@ const fetchGroups = (ev) => {
     }
 
     const url = 'https://api.census.gov/data/2010/dec/sf1/groups.json';
-    document.querySelector('#output').innerHTML = 'Retrieving data from census.gov...';
+    document.querySelector('#variable-selection').innerHTML = 'Retrieving data from census.gov...';
     fetch(url)
         .then(response => response.json())
         .then(data => {
@@ -113,7 +127,7 @@ const displayVariables = (ev) => {
     if (!variableTree) {  buildVariableTree(); }
 
     if (showRawJSON) {
-        jsonify(variableTree, addVariable);
+        jsonify(variableTree, target="#variable-selection", callback=addVariable);
     } else {
         const rows = [];
         for (const group in variableTree) {
@@ -159,7 +173,7 @@ const displayVariables = (ev) => {
                 }
             }
         }
-        document.querySelector('#output').innerHTML = '<table class="variables"><tr>' + rows.join('</tr><tr>') + '</tr></table>';
+        document.querySelector('#variable-selection').innerHTML = '<table class="variables"><tr>' + rows.join('</tr><tr>') + '</tr></table>';
         const links = document.querySelector('table.variables').querySelectorAll('a');
         for (const link of links) {
             link.onclick = addVariable;
@@ -170,11 +184,13 @@ const displayVariables = (ev) => {
 const addVariable = (ev) => {
     variables.push(ev.currentTarget.dataset.code);
     document.querySelector('#selected-variables').innerHTML = JSON.stringify(variables, null, 2);
+    getStatistics();
     return false;
 };
 const addState = (ev) => {
     states.push(ev.currentTarget.dataset.code);
     document.querySelector('#selected-states').innerHTML = JSON.stringify(states, null, 2);
+    getStatistics();
     return false;
 };
 
@@ -230,14 +246,16 @@ const buildVariableTree = () => {
     console.log(variableLookup);
 };
 
-const jsonify = (data, callback) => {
-    document.querySelector('#output').innerHTML = '';
+const jsonify = (data, target='#variable-selection', callback=null, depth=1) => {
+    document.querySelector(target).innerHTML = '';
     var jsonViewer = new JSONViewer();
-    document.querySelector('#output').appendChild(jsonViewer.getContainer());
-    jsonViewer.showJSON(data, -1, 1);
+    document.querySelector(target).appendChild(jsonViewer.getContainer());
+    jsonViewer.showJSON(data, -1, depth);
     
     //add links:
-    addLinks(callback);
+    if (callback) {
+        addLinks(callback);
+    }
 };
 
 const addLinks = (callback) => {
@@ -269,11 +287,11 @@ const renderTemplate = (domID) => {
         <section class="toolbar">
             <span class="buttons">
                 <button id="variables" class="selected">Variable Codes</button>
-                <button id="states">State Codes</button>
+                <button id="states">County Codes</button>
             </span>
             <span class="pull-right"><input type="checkbox" id="data-view" checked /> Code View</span>
         </section>
-        <section id="output"></section>
+        <section id="variable-selection"></section>
         <section id="queries">
             <div>
                 <strong>Location</strong>
@@ -284,12 +302,13 @@ const renderTemplate = (domID) => {
                 <div id="selected-variables"></div>
             </div>
         </section>
+        <section id="results"></section>
     </div>`
     document.querySelector('#' + domID).innerHTML = template;
     document.querySelector('#states').onclick = fetchStates;
     document.querySelector('#variables').onclick = fetchVariables;
     document.querySelector('#data-view').onchange = () => {
-        document.querySelector('#output').innerHTML = 'Updating display...';
+        document.querySelector('#variable-selection').innerHTML = 'Updating display...';
         setTimeout(
             () => {
                 document.querySelector('button.selected').click();
@@ -297,18 +316,23 @@ const renderTemplate = (domID) => {
     };
 };
 
-
 const getStatistics = () => {
     // data for Cook County:
     // https://api.census.gov/data/2010/dec/sf1?get=NAME,PCT020003&for=county:031&in=state:17
     const state = '17'; // illinois
     const counties = ['031', '097']; // cook and lake
-    const url = `https://api.census.gov/data/2010/dec/sf1?get=NAME,PCT020003&for=county:${counties.join(',')}&in=state:${state}`; 
-    console.log(url);
+    const url = `https://api.census.gov/data/2010/dec/sf1?get=${variables.join(',')}&for=county:${counties.join(',')}&in=state:${state}`; 
+    console.log('fetching:', url);
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            jsonify(data, target='#results', callback=null, depth=2);
+        })
 }
 
 
 //initialize:
 renderTemplate('census_demo');
 fetchVariables();
-getStatistics();
+// getStatistics();
+// fetchCounties();
