@@ -79,7 +79,6 @@ h2 span {
 }
 
 table.variables td, table.variables th {
-  max-width: 300px;
   font-size: 0.9rem;
   padding: 1px;
 }

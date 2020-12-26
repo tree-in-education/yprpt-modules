@@ -154,27 +154,23 @@ const displayVariables = (ev) => {
             const entry = variableTree[group];
             groupName = group ? group.toLowerCase() : '';
             rows.push(`
-                    <th style="text-align:left;" colspan="9">${groupName}</th>
+                    <th style="text-align:left;" colspan="6">${groupName}</th>
                 `);
             for (key in entry) {
                 const entry2 = entry[key];
-                const description2 = entry2.Metadata.description ? entry2.Metadata.description.toLowerCase() : '';
                 rows.push(`
-                    <td>${key}</td>
                     <td><a href="#" data-code="${entry2.Metadata.code}">${entry2.Metadata.code}</a></td>
-                    <td colspan="7">${description2}</td>
+                    <td colspan="5">${key}</td>
                 `);
                 for (key2 in entry2) {
                     if (key2 === 'Metadata') {
                         continue;
                     }
                     const entry3 = entry2[key2];
-                    const description3 = entry3.Metadata.description ? entry3.Metadata.description.toLowerCase() : '';
                     rows.push(`
-                        <td colspan="3"></td>
-                        <td>${key2}</td>
+                        <td colspan="2"></td>
                         <td><a href="#" data-code="${entry3.Metadata.code}">${entry3.Metadata.code}</a></td>
-                        <td colspan="4">${description3}</td>
+                        <td colspan="3">${key2}</td>
                     `);
 
                     for (key3 in entry3) {
@@ -182,12 +178,10 @@ const displayVariables = (ev) => {
                             continue;
                         }
                         const entry4 = entry3[key3];
-                        const description4 = entry4.Metadata.description ? entry4.Metadata.description.toLowerCase() : '';
                         rows.push(`
-                            <td colspan="6"></td>
-                            <td>${key3}</td>
+                            <td colspan="4"></td>
                             <td><a href="#" data-code="${entry4.Metadata.code}">${entry4.Metadata.code}</a></td>
-                            <td>${description4}</td>
+                            <td>${key3}</td>
                         `);
                     }
                 }
