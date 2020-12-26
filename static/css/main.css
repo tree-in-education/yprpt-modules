@@ -99,8 +99,8 @@ table.variables th {
   row-gap: 5px;
   -ms-grid-columns: auto;
       grid-template-columns: auto;
-  -ms-grid-rows: 40px 250px auto auto;
-      grid-template-rows: 40px 250px auto auto;
+  -ms-grid-rows: 40px 250px 100px 310px;
+      grid-template-rows: 40px 250px 100px 310px;
 }
 
 #census_demo .container .toolbar {
