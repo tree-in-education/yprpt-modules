@@ -76,7 +76,7 @@ const displayStates = () => {
         delete stateTree['NAME'];
     }
     if (showRawJSON) {
-        jsonify(stateTree, target="#variable-selection", callback=addState);
+        jsonify(stateTree, target="#variable-selection", callback=addState, depth=2);
     } else {
         const rows = []
         for (key in stateTree) {
@@ -334,7 +334,7 @@ const renderTemplate = (domID) => {
         <section class="toolbar">
             <span class="buttons">
                 <button id="variables" class="selected">Variable Codes</button>
-                <button id="states">County Codes</button>
+                <button id="states">State Codes</button>
             </span>
             <span class="pull-right"><input type="checkbox" id="data-view" checked /> Code View</span>
         </section>
