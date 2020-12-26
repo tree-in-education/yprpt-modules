@@ -6,9 +6,26 @@ let groupData = null;
 let stateTree = null;
 let variableTree = null;
 let groupLookup = null;
+let stateLookup = null;
 let variableLookup = null;
 let variables = ['NAME'];
 let states = [];
+
+
+/*
+    Other example queries:
+    Examples published here: https://api.census.gov/data/2010/dec/sf1/examples.html
+    
+    1. Get counties in the state of illinois:
+        https://api.census.gov/data/2010/dec/sf1?get=NAME,H001001&for=county:*&in=state:17`; 
+    2. Get tracts in the state of illinois:
+        https://api.census.gov/data/2010/dec/sf1?get=TRACT,NAME&for=tract:*&in=state:17
+    3. Get data by  zip code: 
+        https://api.census.gov/data/2010/dec/sf1?get=H001001,NAME&for=zip%20code%20tabulation%20area:60202
+    4. Block, Block Group, Tract, County in Lake, Cook counties:
+        https://api.census.gov/data/2010/dec/sf1?get=P001001,NAME,ZCTA5&for=tract:*&in=state:17&in=county:031,097&in=tract:*
+    5. Block Group, Tract, County in Lake, Cook counties:
+*/
 
 const fetchStates = (ev) => {
     //documentation: https://api.census.gov/data/2010/dec/sf1?get=H001001,NAME&for=state:*
@@ -20,6 +37,7 @@ const fetchStates = (ev) => {
     }
 
     //only query if it doesn't exist yet:
+    // population code: P001001
     const url = 'https://api.census.gov/data/2010/dec/sf1?get=H001001,NAME&for=state:*';
     document.querySelector('#variable-selection').innerHTML = 'Retrieving data from census.gov...';
     fetch(url)
@@ -47,7 +65,9 @@ const displayStates = () => {
     const showRawJSON = document.querySelector('#data-view').checked;
     if (!stateTree) {
         stateTree = {};
+        stateLookup = {};
         for (const state of stateData) {
+            stateLookup[state[2]] = state[1];
             stateTree[state[1]] = {
                 housing_units: parseInt(state[0]),
                 code: state[2]
@@ -183,13 +203,38 @@ const displayVariables = (ev) => {
 
 const addVariable = (ev) => {
     variables.push(ev.currentTarget.dataset.code);
-    document.querySelector('#selected-variables').innerHTML = JSON.stringify(variables, null, 2);
+    const output = [];
+    for (const code of variables) {
+        if (variableLookup[code]) {
+            output.push(code + ': ' + variableLookup[code].toLowerCase());
+        }
+        else {
+            output.push(code);
+        }
+    }
+    document.querySelector('#selected-variables').innerHTML = `
+        <ul>
+            <li>${output.join('</li><li>')}</li>
+        </ul>`;
     getStatistics();
     return false;
 };
 const addState = (ev) => {
     states.push(ev.currentTarget.dataset.code);
-    document.querySelector('#selected-states').innerHTML = JSON.stringify(states, null, 2);
+    const output = [];
+    for (const code of states) {
+        if (stateLookup[code]) {
+            output.push(code + ': ' + stateLookup[code].toLowerCase());
+        }
+        else {
+            output.push(code);
+        }
+    }
+    document.querySelector('#selected-states').innerHTML = `
+        <ul>
+            <li>${output.join('</li><li>')}</li>
+        </ul>
+        `
     getStatistics();
     return false;
 };

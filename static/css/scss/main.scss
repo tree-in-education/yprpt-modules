@@ -62,8 +62,8 @@ h2 {
 .main {
     margin-top: 5vh;
     margin-bottom: 10vh;
-    margin-left: 15vw;
-    margin-right: 15vw;
+    margin-left: 10vw;
+    margin-right: 10vw;
     padding: 10px;
 }
 
@@ -87,11 +87,11 @@ table.variables {
 
     .container {
         width: 100%;
-        height: 600px;
+        max-height: 700px;
         display: grid;
-        row-gap: 10px;
+        row-gap: 5px;
         grid-template-columns: auto;
-        grid-template-rows: 40px auto 100px 200px;
+        grid-template-rows: 40px 250px auto auto;
 
         .toolbar {
             display: flex;
@@ -123,14 +123,19 @@ table.variables {
         }
         #variable-selection, #results {
             overflow-y: auto;
-            border: solid 1px black;
+            border: solid 1px #CCC;
+        }
+        #results { 
+            min-height: 100px;
+            max-height: 250px;
         }
         #queries {
+            font-size: 0.9rem;
             display: grid;
-            column-gap: 10px;
+            column-gap: 5px;
             grid-template-columns: 1fr 1fr;
             > div {
-                border: solid 1px #000;
+                border: solid 1px #CCC;
                 background: #F9F9F9;
                 padding: 10px;
             }
