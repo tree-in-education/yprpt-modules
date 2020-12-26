@@ -261,12 +261,14 @@ const buildVariableTree = () => {
             }
             if (level === numTokens) {
                 elem[token].Metadata.code = key;
+                variableLookup[key] = entry.label.replaceAll('!!', ' > ');
                 if (entry.concept) {
-                    variableLookup[key] = entry.concept;
+                    // variableLookup[key] = entry.concept;
                     elem[token].Metadata.description = entry.concept;
-                } else {
-                    variableLookup[key] = 'Not available';
-                }
+                } 
+                // else {
+                //     variableLookup[key] = 'Not available';
+                // }
             }
             elem = elem[token];
             level += 1;
@@ -361,17 +363,38 @@ const renderTemplate = (domID) => {
     };
 };
 
+const formatResults = (data) => {
+    const results = {};
+    const header = data.shift();
+    header.shift();
+    for (const row of data) {
+        const state = row.shift();
+        results[state] = {};
+        for (let i = 0; i < row.length; i++) {
+            const code = header[i];
+            results[state][code] = { value: row[i] };
+            if(variableLookup[code]) {
+                results[state][code].description = variableLookup[code].toLowerCase();
+            }
+        }
+    }
+    return results;
+}
+
 const getStatistics = () => {
+    if (states.length === 0 || variables.length === 0) {
+        return;
+    }
     // data for Cook County:
     // https://api.census.gov/data/2010/dec/sf1?get=NAME,PCT020003&for=county:031&in=state:17
-    const state = '17'; // illinois
-    const counties = ['031', '097']; // cook and lake
-    const url = `https://api.census.gov/data/2010/dec/sf1?get=${variables.join(',')}&for=county:${counties.join(',')}&in=state:${state}`; 
+    
+    const url = `https://api.census.gov/data/2010/dec/sf1?get=${variables.join(',')}&for=state:${states.join(',')}`; 
     console.log('fetching:', url);
     fetch(url)
         .then(response => response.json())
         .then(data => {
-            jsonify(data, target='#results', callback=null, depth=2);
+            data = formatResults(data);
+            jsonify(data, target='#results', callback=null, depth=3);
         })
 }
 
