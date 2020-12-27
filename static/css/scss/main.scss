@@ -59,6 +59,17 @@ h2 {
     box-shadow: 0 0 1px rgba(255, 255, 255, .5);
 }
 
+blockquote {
+    font-size: 1.3em;
+    line-height: 1.6em;
+    font-weight: bold;
+    color: #444;
+    background: #F9F9F9;
+    margin-left: 40px;
+    padding: 10px 10px 10px 20px;
+    border-left: solid 4px #eb097a;
+}
+
 .main {
     margin-top: 5vh;
     margin-bottom: 10vh;
@@ -126,6 +137,8 @@ table.variables {
             border: solid 1px #CCC;
         }
         #results { 
+            overflow-y: auto;
+            border: solid 1px #CCC;
             min-height: 100px;
             max-height: 250px;
         }
@@ -138,6 +151,8 @@ table.variables {
                 border: solid 1px #CCC;
                 background: #F9F9F9;
                 padding: 10px;
+                overflow-y: auto;
+                height: 100%;
             }
         }
     }
